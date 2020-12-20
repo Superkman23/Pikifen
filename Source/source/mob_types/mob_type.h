@@ -139,6 +139,13 @@ public:
             limb_parent_offset(0),
             limb_child_offset(0) {}
     };
+
+    struct sound_struct {
+        string name;
+        string filepath;
+        sample_struct sound;
+    };
+
     
     //Info on a widget to present in the area editor,
     //to better help users set the properties of a mob instance.
@@ -216,6 +223,8 @@ public:
     vector<spawn_struct> spawns;
     //Information on its children mobs.
     vector<child_struct> children;
+    //Information on all the sounds a mob can play.
+    vector<sound_struct> samples;
     //How many Pikmin can carry it, at most.
     size_t max_carriers;
     //Pikmin strength needed to carry it.

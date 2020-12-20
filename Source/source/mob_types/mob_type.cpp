@@ -519,6 +519,26 @@ void load_mob_type_from_file(
         mt->children.push_back(new_child);
     }
     
+    data_node* samples_node = file.get_child_by_name("samples");
+    size_t n_samples = samples_node->get_nr_of_children();
+    for(size_t s = 0; s < n_samples; ++s) {
+    
+        data_node* sample_node = samples_node->get_child(s);
+        reader_setter sample_rs(sample_node);
+        mob_type::sound_struct new_sample;
+        string filepath;
+
+        new_sample.name = sample_node->name;
+        sample_rs.set("file", filepath);
+        new_sample.filepath = filepath;
+        if (load_resources) {
+            new_sample.sound = load_sample(filepath);
+        }
+        mt->samples.push_back(new_sample);
+    }
+    
+
+
     data_node* ae_props_node =
         file.get_child_by_name("area_editor_properties");
     size_t n_ae_props = ae_props_node->get_nr_of_children();

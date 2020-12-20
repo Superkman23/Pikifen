@@ -673,11 +673,12 @@ void init_mob_actions() {
         nullptr
     );
     
+    reg_param("filepath", MOB_ACTION_PARAM_STRING, false, true);
     reg_action(
         MOB_ACTION_PLAY_SOUND,
         "play_sound",
         mob_action_runners::play_sound,
-        nullptr
+        mob_action_loaders::play_sound
     );
     
     reg_param("text", MOB_ACTION_PARAM_STRING, false, true);

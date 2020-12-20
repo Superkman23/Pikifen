@@ -436,6 +436,24 @@ bool mob_action_loaders::move_to_target(mob_action_call &call) {
 
 
 /* ----------------------------------------------------------------------------
+ * Loading code for the spawning mob script action.
+ * call:
+ *   Mob action call that called this.
+ */
+bool mob_action_loaders::play_sound(mob_action_call& call) {
+    for (size_t s = 0; s < call.mt->samples.size(); ++s) {
+        if (call.mt->samples[s].name == call.args[0]) {
+            call.args[0] = i2s(s);
+            return true;
+        }
+    }
+    call.custom_error =
+        "Unknown sample info block \"" + call.args[0] + "\"!";
+    return false;
+}
+
+
+/* ----------------------------------------------------------------------------
  * Loading code for the status reception mob script action.
  * call:
  *   Mob action call that called this.
@@ -1288,7 +1306,7 @@ void mob_action_runners::order_release(mob_action_run_data &data) {
  *   Data about the action call.
  */
 void mob_action_runners::play_sound(mob_action_run_data &data) {
-
+    data.m->type->samples[s2i(data.args[0])].sound.play(0.06f, false);
 }
 
 
