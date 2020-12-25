@@ -63,6 +63,8 @@ public:
     void increase_maturity(const int amount);
     //Starts the trail behind a thrown Pikmin.
     void start_throw_trail();
+    //Ticks the animation to speed up the lying animation.
+    void rush_getup();
     
     //Constructor.
     pikmin(const point &pos, pikmin_type* type, const float angle);

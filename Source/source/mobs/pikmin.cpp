@@ -271,6 +271,14 @@ void pikmin::start_throw_trail() {
 
 
 /* ----------------------------------------------------------------------------
+ * Ticks the animation to speed up the lying animation.
+ */
+void pikmin::rush_getup() {
+    tick_animation(0.5f);
+}
+
+
+/* ----------------------------------------------------------------------------
  * Ticks some logic specific to Pikmin.
  * delta_t:
  *   How many seconds to tick by.

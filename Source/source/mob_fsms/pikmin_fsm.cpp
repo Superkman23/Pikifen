@@ -915,6 +915,9 @@ void pikmin_fsm::create_fsm(mob_type* typ) {
         efc.new_event(MOB_EV_ANIMATION_END); {
             efc.run(pikmin_fsm::get_up);
         }
+        efc.new_event(MOB_EV_WHISTLED); {
+            efc.run(pikmin_fsm::rush_getup);
+        }
         efc.new_event(MOB_EV_LANDED); {
             efc.run(pikmin_fsm::stand_still);
         }
@@ -2681,6 +2684,21 @@ void pikmin_fsm::remove_disabled(mob* m, void* info1, void* info2) {
  */
 void pikmin_fsm::remove_panic(mob* m, void* info1, void* info2) {
     m->invuln_period.start();
+}
+
+
+/* ----------------------------------------------------------------------------
+ * When a Pikmin is whistled to getup faster
+ * m:
+ *   The mob.
+ * info1:
+ *   Unused.
+ * info2:
+ *   Unused.
+ */
+void pikmin_fsm::rush_getup(mob* m, void* info1, void* info2) {
+    pikmin* p = (pikmin*)m;
+    p->rush_getup();
 }
 
 

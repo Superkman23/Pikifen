@@ -70,6 +70,7 @@ void rechase_opponent(         mob* m, void* info1, void* info2);
 void release_tool(             mob* m, void* info1, void* info2);
 void remove_disabled(          mob* m, void* info1, void* info2);
 void remove_panic(             mob* m, void* info1, void* info2);
+void rush_getup(               mob* m, void* info1, void* info2);
 void seed_landed(              mob* m, void* info1, void* info2);
 void set_idle_task_reach(      mob* m, void* info1, void* info2);
 void set_swarm_reach(          mob* m, void* info1, void* info2);
