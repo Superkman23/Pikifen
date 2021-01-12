@@ -74,6 +74,8 @@ mob::mob(const point &pos, mob_type* type, const float angle) :
     group_spot_index(INVALID),
     carry_info(nullptr),
     delivery_info(nullptr),
+    health_wheel_smoothed_ratio(1.0f),
+    health_wheel_alpha(1.0f),
     id(next_mob_id),
     health(type->max_health),
     invuln_period(0),
@@ -2501,6 +2503,31 @@ void mob::tick_misc_logic(const float delta_t) {
     
     if(type->blocks_carrier_pikmin && health <= 0) {
         game.states.gameplay->path_mgr.handle_obstacle_clear(this);
+    }
+    
+    float ratio = health / type->max_health;
+    float ratio_difference = ratio - health_wheel_smoothed_ratio;
+    float ratio_max_change_amount = 1 * delta_t;
+    
+    if(ratio_difference < 0) {
+        ratio_difference *= -1;
+    }
+    
+    if(health <= 0) {
+        ratio_max_change_amount *= 4.0f;
+        if(health_wheel_smoothed_ratio <= 0) {
+            health_wheel_alpha -= 3.0f * delta_t;
+        }
+    }
+    
+    if(ratio_difference < ratio_max_change_amount) {
+        health_wheel_smoothed_ratio = ratio;
+    } else {
+        if(ratio > health_wheel_smoothed_ratio) {
+            health_wheel_smoothed_ratio += ratio_max_change_amount;
+        } else {
+            health_wheel_smoothed_ratio -= ratio_max_change_amount;
+        }
     }
 }
 

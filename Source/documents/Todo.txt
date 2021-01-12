@@ -29,13 +29,14 @@ Current tasks (tasks being worked on, but not yet committed)
                 Each object has a lambda for what to do when "activated" -- when clicked or when the player presses the "activate" key on it
                 Each object has the ability to capture a key-press and tell the manager not to handle it. This way, a slider widget can use left/right to change its value, instead of the manager using that to change to a different widget
                 When an object is added to the manager's list, it can specify that it's framed inside another
-        Change the arrow keys logic that detects the next available button
-        Move the title screen logo composition to the GUI/Main_menu.txt file
     
 Next tasks (roughly sorted most important first)
     --- Known problems ---
     
     --- v0.20.0 ---
+    Get the instructions for compiling on Mac from having talked with MidnightWhisper (thanks MidnightWhisper)
+        Keep in mind fullscreen may lock out
+    If you use debug commands, the results screen should say so
     Mobs that receive a message should check if it's the exact message they expect. Otherwise, a gimmick area that has objects that broadcast a specific message everywhere may end up activating signs
     Add a "get_focus_info" action
     Add a "get_focus_distance" action
@@ -69,6 +70,9 @@ Next tasks (roughly sorted most important first)
     Rock Pikmin
         Should be unable to latch
         Should lunge on their own when attacking
+    Remember to update the Pikmin Fanon wiki page link in the PNG files
+    
+    --- v0.21.0 ---
     Details
         Make bridges open sectors gradually
             If the bridge object has a parameter "halfway", it should only open half the bridge sectors. This makes it possible to have two bridges connect to one another from opposite ends. (thanks Kman)
@@ -123,6 +127,8 @@ Next tasks (roughly sorted most important first)
             Climbing (add the track logic too)
             Sliding (add the track logic too)
     Allow any animation to interpolate the transformations (rotation, scale, etc.)
+    Add throw options to the controls: no special effect, hold button to spam throws, press to toggle spam-throw on or off
+        Same for whistling and other controls you may need to mash/hold
     Graphics overhaul
         Gates should have a different appearance depending on how damaged they are
         Sprouts should have their tops sway in the wind, and the animation should start with nothingness, and grow into a sprout proper (as if popping out of the ground) (Kman's made some)
@@ -153,8 +159,8 @@ Next tasks (roughly sorted most important first)
         Kman's Adventure area (see #content-sharing)
     Try to compile on Mac
     
-    --- v0.21.0 ---
-    Menus
+    --- v0.22.0 ---
+    Missing menus
         Radar
             Radar page
                 https://en.wikipedia.org/wiki/Topography topographic drawing, a zoom-out, an abstract texture like P1/P2, ...?
@@ -182,8 +188,16 @@ Next tasks (roughly sorted most important first)
         Pikmin extinction
             Check Onions, ships, and converters that have Pikmin in the buffer
             Stages should pick whether or not they finish upon Pikmin extinctions, since some puzzle/gimmick stages could involve no Pikmin
+    Challenge mode stuff
+        The idea is to make it so areas have some sort of goal, other than being a sandbox
+        Each area should have a "tags" field, where you write tags like "Beach", "Gimmick", "Short and sweet", etc. Could be useful later on for filtering, or to match with other tagged things, like songs, if need be
+        Each stage can override the global day time settings -- a level could want to start at dusk and end at night, and could want to do it all over 1 real-time hour
+        Each stage should say what its difficulty is, like it does with the creator and such
+        Each stage should have a goal -- the three main goals from Pikmin 3, Get the Target Score!, Survive!, Reach the Exit!, Deliver X to Y!, Grow X Pikmin!, Defeat Enemy X! Escort X! (partial thanks, Jimble, Kman)
+            And different sub-goals: without getting spotted, until time runs out
+            Each stage should have different scoring criteria. While there is only one goal, the final score should depend on any combination of the following, with varying weights: Pikmin born, Pikmin deaths, time taken, Pokos gathered, enemies killed. It could also have no scoring, just a boolean completion; this is useful for puzzle levels.
     
-    --- v0.22.0 ---
+    --- v0.23.0 ---
     Music
         Day + fight
         Sunset + fight
@@ -247,11 +261,12 @@ Next tasks (roughly sorted most important first)
         Allow for button combinations
         Would it make sense to have a screen stack system, with push&pop?
         Try to make it deterministic enough to support input playback (replays)?
-        Save the controls in the options file inside a block, and possibly at the end of the options file
         Should the option name + string representation be in input_manager or outside?
         Rework the controls menu to be more intuitive
             Maybe a list of saved control schemes, like the list of saved rulesets in Smash Ultimate? It could come pre-packaged with Keyboard+Mouse, JoyCon, etc. Careful with generic controllers though, since their buttons are as good as random. Also, if there are four players, and they all want JoyCons, there should be a way for them to choose which is which
             Maybe a "simple" controls menu and an "advanced" one? The advanced is the old one, but the "simple" one lets the player choose a controller, only map the most common controls, and automatically associate an analog stick to all four directions. If I do this, I should add a tip to the readme to tell people to try the advanced controls after they're comfortable with the engine.
+            When waiting for an input to assign, only detect a joystick tilt if it is above a certain threshold, otherwise even the gentlest breeze will make it assign a random joystick axis
+            Save the controls in the options file inside a block, and possibly at the end of the options file
         Current leader should move slower if the analog stick is not held all the way
         If you're holding a direction as you read a sign, you'll continue to go in that direction, even if you let go. Pressing again fixes this. Make sure this is fixed.
         There should be a cap on how many Pikmin can be thrown per second -- if the player presses the button while in cooldown, it should probably queue the throw -- the same needs to be done for other buttons, probably
@@ -295,12 +310,6 @@ Next tasks (roughly sorted most important first)
         Misc
             Does it make sense to create a FOF above a bottomless pit?
             https://www.deviantart.com/ronindude/art/Battlemap-Beach-Cave-730069774 I like the style of this -- maybe it can help with readability?
-    Challenge mode stuff
-        Challenge levels can override the global day time settings -- a level could want to start at dusk and end at night, and could want to do it all over 1 real-time hour
-        Each stage should say what its difficulty is, like it does with the creator and such
-        Each stage should have a goal -- the three main goals from Pikmin 3, Get the Target Score!, Survive!, Reach the Exit!, Deliver X to Y!, Grow X Pikmin!, Defeat Enemy X! Escort X! (partial thanks, Jimble, Kman)
-            And different sub-goals: without getting spotted, until time runs out
-            Each stage should have different scoring criteria. While there is only one goal, the final score should depend on any combination of the following, with varying weights: Pikmin born, Pikmin deaths, time taken, Pokos gathered, enemies killed. It could also have no scoring, just a boolean completion; this is useful for puzzle levels.
     Multiplayer
         1 struct of info for each player, multiplayer controls
         During loading, show how the screen is going to be split, and show which player is in which screen
@@ -623,6 +632,7 @@ Tasks for later on (I might never implement these)
             A feature with which to search for mobs/sectors
             Buttons to align textures with the sectors, stretching them to fit, or to tile twice, three times, left-aligned, right-aligned, etc.
             The problem searcher could detect when an enemy's spoils is set to an object that doesn't exist (thanks Nutty171)
+            If it detects an auto-backup that's younger than the saved area, it should ask the user if they want to continue from the backup
         Animation editor
             Version 3.0
                 "Sprite" -> "Pose"?

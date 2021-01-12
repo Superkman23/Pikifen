@@ -15,6 +15,9 @@
 #include "game.h"
 #include "utils/string_utils.h"
 
+const float gui_item::JUICY_GROW_DELTA = 0.05f;
+const float gui_item::JUICY_GROW_DURATION = 0.3f;
+
 
 /* ----------------------------------------------------------------------------
  * Creates a new button GUI item.
@@ -28,8 +31,60 @@ button_gui_item::button_gui_item(const string &text, ALLEGRO_FONT* font) :
     [this, text, font] (const point & center, const point & size) {
         draw_button(
             center, size, text, font,
-            map_gray(255), selected
+            map_gray(255), selected, get_juicy_grow_amount()
         );
+    };
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Creates a new checkbox GUI item.
+ */
+check_gui_item::check_gui_item(
+    bool* value, const string &text, ALLEGRO_FONT* font
+) :
+    gui_item(true),
+    value(value),
+    text(text),
+    font(font) {
+    
+    on_draw =
+    [this, text, font, value] (const point & center, const point & size) {
+        draw_compressed_text(
+            font, map_gray(255),
+            point(center.x - size.x * 0.45, center.y),
+            ALLEGRO_ALIGN_LEFT, 1,
+            point(size.x * 0.90, size.y),
+            text
+        );
+        
+        draw_bitmap(
+            game.sys_assets.bmp_checkbox_check,
+            point((center.x + size.x * 0.5) - 40, center.y),
+            point(32, -1),
+            0,
+            (*value) ? map_gray(255) : al_map_rgba(32, 32, 32, 80)
+        );
+        
+        ALLEGRO_COLOR box_tint =
+            selected ? al_map_rgb(87, 200, 208) : map_gray(255);
+            
+        draw_textured_box(
+            center, size, game.sys_assets.bmp_bubble_box, box_tint
+        );
+        
+        if(selected) {
+            draw_textured_box(
+                center,
+                size + 10.0 + sin(game.time_passed * TAU) * 2.0f,
+                game.sys_assets.bmp_focus_box
+            );
+        }
+    };
+    
+    on_activate =
+    [this, value] (const point &) {
+        (*value) = !(*value);
     };
 }
 
@@ -44,7 +99,7 @@ gui_item::gui_item(const bool selectable) :
     parent(nullptr),
     offset(0.0f),
     padding(0.0f),
-    juicy_timer(0.0f),
+    juice_timer(0.0f),
     on_draw(nullptr),
     on_tick(nullptr),
     on_event(nullptr),
@@ -76,6 +131,20 @@ float gui_item::get_child_bottom() {
             );
     }
     return bottommost;
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Returns the juicy grow amount for the current juicy grow animation, if any.
+ */
+float gui_item::get_juicy_grow_amount() {
+    if(juice_timer == 0.0f) {
+        return 0.0f;
+    }
+    
+    return
+        ease(EASE_UP_AND_DOWN, juice_timer / JUICY_GROW_DURATION) *
+        JUICY_GROW_DELTA;
 }
 
 
@@ -133,6 +202,14 @@ bool gui_item::is_mouse_on(const point &cursor_pos) {
 
 
 /* ----------------------------------------------------------------------------
+ * Starts the process of animating a juicy grow effect.
+ */
+void gui_item::start_juicy_grow() {
+    juice_timer = JUICY_GROW_DURATION;
+}
+
+
+/* ----------------------------------------------------------------------------
  * Creates a new GUI manager.
  */
 gui_manager::gui_manager() :
@@ -143,7 +220,8 @@ gui_manager::gui_manager() :
     left_pressed(false),
     down_pressed(false),
     ok_pressed(false),
-    back_pressed(false) {
+    back_pressed(false),
+    anim_type(GUI_MANAGER_ANIM_NONE) {
     
 }
 
@@ -190,10 +268,14 @@ void gui_manager::destroy() {
 void gui_manager::draw() {
     int ocr_x, ocr_y, ocr_w, ocr_h;
     for(size_t i = 0; i < items.size(); ++i) {
-        point center = items[i]->center;
-        point size = items[i]->size;
+        gui_item* i_ptr = items[i];
+        
+        if(!i_ptr->visible) continue;
+        
+        point center = i_ptr->center;
+        point size = i_ptr->size;
         point multipliers;
-        gui_item* parent = items[i]->parent;
+        gui_item* parent = i_ptr->parent;
         
         if(parent) {
             al_get_clipping_rectangle(&ocr_x, &ocr_y, &ocr_w, &ocr_h);
@@ -207,10 +289,63 @@ void gui_manager::draw() {
             );
         }
         
-        items[i]->on_draw(
-            items[i]->get_real_center(),
-            items[i]->get_real_size()
-        );
+        point final_center = i_ptr->get_real_center();
+        point final_size = i_ptr->get_real_size();
+        
+        if(anim_timer.time_left > 0.0f) {
+            switch(anim_type) {
+            case GUI_MANAGER_ANIM_OUT_TO_IN: {
+                point start_center;
+                float angle =
+                    get_angle(
+                        point(game.win_w, game.win_h) / 2.0f,
+                        final_center
+                    );
+                start_center.x = final_center.x + cos(angle) * game.win_w;
+                start_center.y = final_center.y + sin(angle) * game.win_h;
+                
+                final_center.x =
+                    interpolate_number(
+                        ease(EASE_OUT, 1.0f - anim_timer.get_ratio_left()),
+                        0.0f, 1.0f, start_center.x, final_center.x
+                    );
+                final_center.y =
+                    interpolate_number(
+                        ease(EASE_OUT, 1.0f - anim_timer.get_ratio_left()),
+                        0.0f, 1.0f, start_center.y, final_center.y
+                    );
+                break;
+                
+            } case GUI_MANAGER_ANIM_IN_TO_OUT: {
+                point end_center;
+                float angle =
+                    get_angle(
+                        point(game.win_w, game.win_h) / 2.0f,
+                        final_center
+                    );
+                end_center.x = final_center.x + cos(angle) * game.win_w;
+                end_center.y = final_center.y + sin(angle) * game.win_h;
+                
+                final_center.x =
+                    interpolate_number(
+                        ease(EASE_IN, 1.0f - anim_timer.get_ratio_left()),
+                        0.0f, 1.0f, final_center.x, end_center.x
+                    );
+                final_center.y =
+                    interpolate_number(
+                        ease(EASE_IN, 1.0f - anim_timer.get_ratio_left()),
+                        0.0f, 1.0f, final_center.y, end_center.y
+                    );
+                break;
+                
+            } default: {
+                break;
+                
+            }
+            }
+        }
+        
+        i_ptr->on_draw(final_center, final_size);
         
         if(parent) {
             al_set_clipping_rectangle(ocr_x, ocr_y, ocr_w, ocr_h);
@@ -244,7 +379,9 @@ void gui_manager::handle_event(const ALLEGRO_EVENT &ev) {
     }
     
     if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
-        if(selected_item) selected_item->on_activate();
+        if(selected_item) {
+            selected_item->on_activate(point(ev.mouse.x, ev.mouse.y));
+        }
     }
     
     vector<action_from_event> actions = get_actions_from_event(ev);
@@ -324,7 +461,7 @@ void gui_manager::handle_menu_button(
             for(size_t i = 0; i < items.size(); ++i) {
                 if(items[i]->selectable) {
                     set_selected_item(items[i]);
-                    break;
+                    return;
                 }
             }
         }
@@ -333,91 +470,58 @@ void gui_manager::handle_menu_button(
             return;
         }
         
-        gui_item* closest_item = NULL;
-        dist closest_item_dist;
-        point cur_pivot;
-        point i2_pivot;
+        vector<point> selectables;
+        vector<gui_item*> selectable_ptrs;
+        size_t selectable_idx = INVALID;
+        float direction = 0.0f;
         
-        for(size_t i = 0; i < items.size(); i++) {
+        switch(pressed) {
+        case BUTTON_MENU_DOWN: {
+            direction = TAU * 0.25f;
+            break;
+        }
+        case BUTTON_MENU_LEFT: {
+            direction = TAU * 0.50f;
+            break;
+        }
+        case BUTTON_MENU_UP: {
+            direction = TAU * 0.75f;
+            break;
+        }
+        }
+        
+        for(size_t i = 0; i < items.size(); ++i) {
             gui_item* i_ptr = items[i];
-            if(
-                i_ptr == selected_item ||
-                !i_ptr->selectable
-            ) {
-                continue;
-            }
-            
-            switch(pressed) {
-            case BUTTON_MENU_RIGHT: {
-                cur_pivot.x =
-                    selected_item->center.x + selected_item->size.x * 0.25;
-                cur_pivot.y =
-                    selected_item->center.y;
-                i2_pivot.x = i_ptr->center.x - i_ptr->size.x * 0.25;
-                i2_pivot.y = i_ptr->center.y;
-                
-                if(selected_item->center.x == i_ptr->center.x) continue;
-                if(cur_pivot.x > i2_pivot.x) i2_pivot.x += game.win_w;
-                break;
-            } case BUTTON_MENU_UP: {
-                cur_pivot.x =
-                    selected_item->center.x;
-                cur_pivot.y =
-                    selected_item->center.y - selected_item->size.y * 0.25;
-                i2_pivot.x = i_ptr->center.x;
-                i2_pivot.y = i_ptr->center.y + i_ptr->size.y * 0.25;
-                
-                if(selected_item->center.y == i_ptr->center.y) continue;
-                if(cur_pivot.y < i2_pivot.y) i2_pivot.y -= game.win_h;
-                break;
-            } case BUTTON_MENU_LEFT: {
-                cur_pivot.x =
-                    selected_item->center.x - selected_item->size.x * 0.25;
-                cur_pivot.y =
-                    selected_item->center.y;
-                i2_pivot.x = i_ptr->center.x + i_ptr->size.x * 0.25;
-                i2_pivot.y = i_ptr->center.y;
-                
-                if(selected_item->center.x == i_ptr->center.x) continue;
-                if(cur_pivot.x < i2_pivot.x) i2_pivot.x -= game.win_w;
-                break;
-            } case BUTTON_MENU_DOWN: {
-                cur_pivot.x =
-                    selected_item->center.x;
-                cur_pivot.y =
-                    selected_item->center.y + selected_item->size.y * 0.25;
-                i2_pivot.x = i_ptr->center.x;
-                i2_pivot.y = i_ptr->center.y - i_ptr->size.y * 0.25;
-                
-                if(selected_item->center.y == i_ptr->center.y) continue;
-                if(cur_pivot.y > i2_pivot.y) i2_pivot.y += game.win_h;
-                break;
-            }
-            }
-            
-            dist d(cur_pivot, i2_pivot);
-            
-            if(!closest_item || d <= closest_item_dist) {
-                closest_item = i_ptr;
-                closest_item_dist = d;
+            if(i_ptr->selectable) {
+                if(i_ptr == selected_item) {
+                    selectable_idx = selectables.size();
+                }
+                selectable_ptrs.push_back(i_ptr);
+                selectables.push_back(i_ptr->get_real_center());
             }
         }
         
-        if(closest_item) {
-            set_selected_item(closest_item);
-        }
+        selectable_idx =
+            select_next_item_directionally(
+                selectables,
+                selectable_idx,
+                direction,
+                point(game.win_w, game.win_h)
+            );
+            
+        set_selected_item(selectable_ptrs[selectable_idx]);
         
         break;
         
     } case BUTTON_MENU_OK: {
         if(is_down && selected_item) {
-            selected_item->on_activate();
+            selected_item->on_activate(point(LARGE_FLOAT, LARGE_FLOAT));
         }
         break;
         
     } case BUTTON_MENU_BACK: {
         if(is_down && back_item) {
-            back_item->on_activate();
+            back_item->on_activate(point(LARGE_FLOAT, LARGE_FLOAT));
         }
         break;
         
@@ -488,12 +592,30 @@ void gui_manager::set_selected_item(gui_item* item) {
 
 
 /* ----------------------------------------------------------------------------
+ * Starts an animation that affects all items.
+ */
+void gui_manager::start_animation(
+    const GUI_MANAGER_ANIMS type, const float duration
+) {
+    anim_type = type;
+    anim_timer.start(duration);
+}
+
+
+/* ----------------------------------------------------------------------------
  * Ticks all items on-screen by one frame of logic.
  */
 void gui_manager::tick(const float delta_t) {
+    anim_timer.tick(delta_t);
+    
     for(size_t i = 0; i < items.size(); ++i) {
-        if(items[i]->on_tick) {
-            items[i]->on_tick(delta_t);
+        gui_item* i_ptr = items[i];
+        if(i_ptr->on_tick) {
+            i_ptr->on_tick(delta_t);
+        }
+        if(i_ptr->juice_timer > 0) {
+            i_ptr->juice_timer =
+                std::max(0.0f, i_ptr->juice_timer - delta_t);
         }
     }
 }
@@ -524,19 +646,86 @@ list_gui_item::list_gui_item() :
     };
     on_event =
     [this] (const ALLEGRO_EVENT & ev) {
-        if(ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-            if(ev.mouse.dz != 0.0f) {
-                float child_bottom = get_child_bottom();
-                if(child_bottom <= 1.0f) {
-                    return;
-                }
-                target_offset =
-                    clamp(
-                        target_offset + (-ev.mouse.dz) * 0.2f,
-                        0.0f,
-                        get_child_bottom() - 1.0f
-                    );
+        if(
+            ev.type == ALLEGRO_EVENT_MOUSE_AXES &&
+            is_mouse_on(point(ev.mouse.x, ev.mouse.y)) &&
+            ev.mouse.dz != 0.0f
+        ) {
+            float child_bottom = get_child_bottom();
+            if(child_bottom <= 1.0f) {
+                return;
             }
+            target_offset =
+                clamp(
+                    target_offset + (-ev.mouse.dz) * 0.2f,
+                    0.0f,
+                    get_child_bottom() - 1.0f
+                );
+        }
+    };
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Creates a new picker GUI item.
+ */
+picker_gui_item::picker_gui_item(
+    const string &base_text, const string &option
+) :
+    gui_item(true),
+    base_text(base_text),
+    option(option),
+    on_previous(nullptr),
+    on_next(nullptr) {
+    
+    on_draw =
+    [this] (const point & center, const point & size) {
+        draw_text_lines(
+            game.fonts.main, map_gray(255),
+            point(center.x - size.x * 0.45, center.y),
+            ALLEGRO_ALIGN_CENTER, 1,
+            "<"
+        );
+        draw_text_lines(
+            game.fonts.main, map_gray(255),
+            point(center.x + size.x * 0.45, center.y),
+            ALLEGRO_ALIGN_CENTER, 1,
+            ">"
+        );
+        
+        float juicy_grow_amount = this->get_juicy_grow_amount();
+        
+        draw_compressed_scaled_text(
+            game.fonts.main, map_gray(255),
+            point(center.x - size.x * 0.40, center.y),
+            point(1.0 + juicy_grow_amount, 1.0 + juicy_grow_amount),
+            ALLEGRO_ALIGN_LEFT, 1,
+            point(size.x * 0.80, size.y),
+            this->base_text + this->option
+        );
+        
+        ALLEGRO_COLOR box_tint =
+            selected ? al_map_rgb(87, 200, 208) : map_gray(255);
+            
+        draw_textured_box(
+            center, size, game.sys_assets.bmp_bubble_box, box_tint
+        );
+        
+        if(selected) {
+            draw_textured_box(
+                center,
+                size + 10.0 + sin(game.time_passed * TAU) * 2.0f,
+                game.sys_assets.bmp_focus_box
+            );
+        }
+    };
+    
+    on_activate =
+    [this] (const point & cursor_pos) {
+        if(cursor_pos.x >= get_real_center().x) {
+            on_next();
+        } else {
+            on_previous();
         }
     };
 }
@@ -618,9 +807,14 @@ text_gui_item::text_gui_item(const string &text, ALLEGRO_FONT* font) :
     
     on_draw =
     [this, text, font] (const point & center, const point & size) {
-        draw_compressed_text(
+    
+        float juicy_grow_amount = get_juicy_grow_amount();
+        
+        draw_compressed_scaled_text(
             font, map_gray(255),
-            center, ALLEGRO_ALIGN_CENTER, 1, size,
+            center,
+            point(1.0 + juicy_grow_amount, 1.0 + juicy_grow_amount),
+            ALLEGRO_ALIGN_CENTER, 1, size,
             text
         );
     };
