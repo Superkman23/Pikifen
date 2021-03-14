@@ -179,7 +179,7 @@ void gameplay_state::do_gameplay_logic() {
             if(!after_hours) {
                 after_hours = true;
                 game.states.results->out_of_time = true;
-                leave();
+                leave(LEAVE_TO_FINISH);
             }
         }
         
@@ -573,6 +573,14 @@ void gameplay_state::do_menu_logic() {
         } else {
             delete onion_menu;
             onion_menu = NULL;
+            paused = false;
+        }
+    } else if(pause_menu) {
+        if(!pause_menu->to_delete) {
+            pause_menu->tick(game.delta_t);
+        } else {
+            delete pause_menu;
+            pause_menu = NULL;
             paused = false;
         }
     }
@@ -1044,12 +1052,30 @@ void gameplay_state::process_mob_touches(
     mob* m_ptr, mob* m2_ptr, const size_t m, const size_t m2, dist &d
 ) {
     //Check if mob 1 should be pushed by mob 2.
-    if(
-        m2_ptr->type->pushes &&
-        m2_ptr->tangible &&
-        m_ptr->type->pushable && !m_ptr->unpushable &&
-        m_ptr->standing_on_mob != m2_ptr &&
+    bool both_idle_pikmin =
+        m_ptr->type->category->id == MOB_CATEGORY_PIKMIN &&
+        m2_ptr->type->category->id == MOB_CATEGORY_PIKMIN &&
         (
+            ((pikmin*) m_ptr)->fsm.cur_state->id == PIKMIN_STATE_IDLING ||
+            ((pikmin*) m_ptr)->fsm.cur_state->id == PIKMIN_STATE_IDLING_H
+        ) && (
+            ((pikmin*) m2_ptr)->fsm.cur_state->id == PIKMIN_STATE_IDLING ||
+            ((pikmin*) m2_ptr)->fsm.cur_state->id == PIKMIN_STATE_IDLING_H
+        );
+    bool ok_to_push = true;
+    if(!m2_ptr->tangible) {
+        ok_to_push = false;
+    } else if(!m_ptr->type->pushable) {
+        ok_to_push = false;
+    } else if(m_ptr->unpushable) {
+        ok_to_push = false;
+    } else if(m_ptr->standing_on_mob == m2_ptr) {
+        ok_to_push = false;
+    }
+    
+    if(
+        ok_to_push &&
+        (m2_ptr->type->pushes || both_idle_pikmin) && (
             (
                 m2_ptr->z < m_ptr->z + m_ptr->height &&
                 m2_ptr->z + m2_ptr->height > m_ptr->z
@@ -1137,17 +1163,28 @@ void gameplay_state::process_mob_touches(
                 //Circle vs circle.
                 xy_collision =
                     d <= (m_ptr->type->radius + m2_ptr->type->radius);
-                temp_push_amount =
-                    fabs(
-                        d.to_float() - m_ptr->type->radius -
-                        m2_ptr->type->radius
-                    );
-                temp_push_angle = get_angle(m2_ptr->pos, m_ptr->pos);
+                if(xy_collision) {
+                    //Only bother calculating if there's a collision.
+                    temp_push_amount =
+                        fabs(
+                            d.to_float() - m_ptr->type->radius -
+                            m2_ptr->type->radius
+                        );
+                    temp_push_angle = get_angle(m2_ptr->pos, m_ptr->pos);
+                }
             }
             
             if(xy_collision) {
                 push_amount = temp_push_amount;
                 push_angle = temp_push_angle;
+                if(both_idle_pikmin) {
+                    //Lower the push.
+                    //Basically, make MOB_PUSH_EXTRA_AMOUNT do all the work.
+                    push_amount = 0.1f;
+                    //Deviate the angle slightly. This way, if two Pikmin
+                    //are in the same spot, they don't drag each other forever.
+                    push_angle += 0.1f * (m > m2);
+                }
             }
         }
         

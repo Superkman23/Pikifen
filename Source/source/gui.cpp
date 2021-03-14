@@ -8,6 +8,8 @@
  * General GUI manager and GUI item classes.
  */
 
+#include <algorithm>
+
 #include "gui.h"
 
 #include "drawing.h"
@@ -308,8 +310,6 @@ void gui_manager::draw() {
         if(!i_ptr->visible) continue;
         if(i_ptr->size.x == 0.0f) continue;
         
-        point center = i_ptr->center;
-        point size = i_ptr->size;
         point multipliers;
         gui_item* parent = i_ptr->parent;
         
@@ -819,13 +819,13 @@ picker_gui_item::picker_gui_item(
     on_draw =
     [this] (const point & center, const point & size) {
         draw_text_lines(
-            game.fonts.main, map_gray(255),
+            game.fonts.standard, map_gray(255),
             point(center.x - size.x * 0.45, center.y),
             ALLEGRO_ALIGN_CENTER, 1,
             "<"
         );
         draw_text_lines(
-            game.fonts.main, map_gray(255),
+            game.fonts.standard, map_gray(255),
             point(center.x + size.x * 0.45, center.y),
             ALLEGRO_ALIGN_CENTER, 1,
             ">"
@@ -834,7 +834,7 @@ picker_gui_item::picker_gui_item(
         float juicy_grow_amount = this->get_juicy_grow_amount();
         
         draw_compressed_scaled_text(
-            game.fonts.main, map_gray(255),
+            game.fonts.standard, map_gray(255),
             point(center.x - size.x * 0.40, center.y),
             point(1.0 + juicy_grow_amount, 1.0 + juicy_grow_amount),
             ALLEGRO_ALIGN_LEFT, 1,
