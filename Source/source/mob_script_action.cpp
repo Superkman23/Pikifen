@@ -341,6 +341,8 @@ bool mob_action_loaders::get_info(mob_action_call &call) {
         call.args[1] = i2s(MOB_ACTION_GET_INFO_Z);
     } else if(call.args[1] == "weight") {
         call.args[1] = i2s(MOB_ACTION_GET_INFO_WEIGHT);
+    } else if (call.args[1] == "hazard") {
+        call.args[1] = i2s(MOB_ACTION_GET_INFO_HAZARD);
     } else {
         report_enum_error(call, 1);
         return false;
@@ -1913,6 +1915,14 @@ void get_info_runner(mob_action_run_data &data, mob* target_mob) {
         }
         break;
         
+    } case MOB_ACTION_GET_INFO_HAZARD: {
+        if (
+            data.call->parent_event == MOB_EV_TOUCHED_HAZARD ||
+            data.call->parent_event == MOB_EV_LEFT_HAZARD
+        ) {
+            *var = ((hazard*)data.custom_data_1)->name;
+        }
+        break;
     }
     }
 }

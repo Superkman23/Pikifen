@@ -157,6 +157,7 @@ mob_event::mob_event(data_node* node, const vector<mob_action_call*> &actions) :
     string n = node->name;
     if(n == "on_enter") type = MOB_EV_ON_ENTER;
     r("on_leave",              MOB_EV_ON_LEAVE);
+    r("on_leave_hazard",       MOB_EV_LEFT_HAZARD);
     r("on_tick",               MOB_EV_ON_TICK);
     r("on_animation_end",      MOB_EV_ANIMATION_END);
     r("on_damage",             MOB_EV_DAMAGE);
