@@ -45,7 +45,17 @@ const string options_menu_state::GUI_FILE_PATH =
  * Creates an "options menu" state.
  */
 options_menu_state::options_menu_state() :
-    game_state() {
+    game_state(),
+    bmp_menu_bg(NULL),
+    logo_min_screen_limit(10.0f, 10.0f),
+    logo_max_screen_limit(90.0f, 50.0f),
+    logo_pikmin_max_speed(800.0f),
+    logo_pikmin_min_speed(600.0f),
+    logo_pikmin_speed_smoothness(0.08f),
+    logo_pikmin_sway_amount(3.0f),
+    logo_pikmin_sway_max_speed(5.5f),
+    logo_pikmin_sway_min_speed(2.5f),
+    logo_pikmin_size(3.5f, 3.5f) {
     
     //Let's fill in the list of preset resolutions. For that, we'll get
     //the display modes fetched by Allegro. These are usually nice round
@@ -194,6 +204,17 @@ void options_menu_state::do_drawing() {
         point(game.win_w, game.win_h), 0, map_gray(64)
     );
     
+    //Draw the logo Pikmin.
+    point pik_size = logo_pikmin_size;
+    pik_size.x *= game.win_w / 100.0f;
+    pik_size.y *= game.win_h / 100.0f;
+
+    for(size_t p = 0; p < logo_pikmin.size(); ++p) {
+        logo_pik* pik = &logo_pikmin[p];
+
+        draw_bitmap_in_box(pik->top, pik->pos, pik_size, pik->angle, map_gray(128));
+    }
+
     gui.draw();
     
     game.fade_mgr.draw();
@@ -206,9 +227,40 @@ void options_menu_state::do_drawing() {
  * Ticks one frame's worth of logic.
  */
 void options_menu_state::do_logic() {
-    game.fade_mgr.tick(game.delta_t);
-    
+    //Animate the logo Pikmin.
+    for (size_t p = 0; p < logo_pikmin.size(); ++p) {
+        logo_pik* pik = &logo_pikmin[p];
+
+        if (!pik->reached_destination) {
+            float a = get_angle(pik->pos, pik->destination);
+            float speed =
+                std::min(
+                    (float)(pik->speed * game.delta_t),
+                    dist(pik->pos, pik->destination).to_float() *
+                    logo_pikmin_speed_smoothness
+                );
+            pik->pos.x += cos(a) * speed;
+            pik->pos.y += sin(a) * speed;
+            if (
+                fabs(pik->pos.x - pik->destination.x) < 1.0 &&
+                fabs(pik->pos.y - pik->destination.y) < 1.0
+                ) {
+                pik->destination = pik->pos;
+                pik->reached_destination = true;
+            }
+
+        }
+        else {
+            pik->sway_var += pik->sway_speed * game.delta_t;
+            pik->pos.x =
+                pik->destination.x +
+                sin(pik->sway_var) * logo_pikmin_sway_amount;
+        }
+    }
+
     gui.tick(game.delta_t);
+
+    game.fade_mgr.tick(game.delta_t);
 }
 
 
@@ -259,7 +311,8 @@ void options_menu_state::leave() {
 void options_menu_state::load() {
     //Resources.
     bmp_menu_bg = load_bmp(game.asset_file_names.main_menu);
-    
+    data_node settings_file(GUI_FILE_PATH);
+
     //Menu items.
     gui.register_coords("back",            15, 10, 20,  6);
     gui.register_coords("fullscreen",      24, 20, 45,  8);
@@ -268,9 +321,7 @@ void options_menu_state::load() {
     gui.register_coords("auto_throw",      24, 55, 45,  8);
     gui.register_coords("controls",        24, 65, 45,  8);
     gui.register_coords("restart_warning", 50, 95, 95, 10);
-    gui.read_coords(
-        data_node(GUI_FILE_PATH).get_child_by_name("positions")
-    );
+    gui.read_coords(settings_file.get_child_by_name("positions"));
     
     //Back button.
     gui.back_item =
@@ -352,6 +403,109 @@ void options_menu_state::load() {
     warning_text->visible = false;
     gui.add_item(warning_text, "restart_warning");
     
+    //Logo pikmin.
+    data_node* logo_node = settings_file.get_child_by_name("logo");
+    reader_setter logo_rs(logo_node);
+
+    data_node* pik_types_node =
+        logo_node->get_child_by_name("pikmin_types");
+    for (size_t t = 0; t < pik_types_node->get_nr_of_children(); ++t) {
+        data_node* type_node = pik_types_node->get_child(t);
+        if (type_node->name.empty()) continue;
+        logo_type_bitmaps[type_node->name[0]] =
+            load_bmp(type_node->value, type_node);
+    }
+
+    data_node* map_node =
+        logo_node->get_child_by_name("map");
+    size_t map_total_rows = map_node->get_nr_of_children();
+    size_t map_total_cols = 0;
+    for (size_t r = 0; r < map_total_rows; ++r) {
+        map_total_cols =
+            std::max(map_total_cols, map_node->get_child(r)->name.size());
+    }
+
+    logo_rs.set("min_screen_limit", logo_min_screen_limit);
+    logo_rs.set("max_screen_limit", logo_max_screen_limit);
+    logo_rs.set("pikmin_max_speed", logo_pikmin_max_speed);
+    logo_rs.set("pikmin_min_speed", logo_pikmin_min_speed);
+    logo_rs.set("pikmin_speed_smoothness", logo_pikmin_speed_smoothness);
+    logo_rs.set("pikmin_sway_amount", logo_pikmin_sway_amount);
+    logo_rs.set("pikmin_sway_max_speed", logo_pikmin_sway_max_speed);
+    logo_rs.set("pikmin_sway_min_speed", logo_pikmin_sway_min_speed);
+    logo_rs.set("pikmin_size", logo_pikmin_size);
+
+    bool map_ok = true;
+
+    for (size_t r = 0; r < map_total_rows; ++r) {
+        string row = map_node->get_child(r)->name;
+
+        for (size_t c = 0; c < row.size(); ++c) {
+            if (row[c] == '.') continue;
+            if (logo_type_bitmaps.find(row[c]) == logo_type_bitmaps.end()) {
+                map_ok = false;
+                log_error(
+                    "Title screen Pikmin logo map has an unknown character \"" +
+                    string(1, row[c]) + "\" on row " + i2s(r + 1) +
+                    ", column " + i2s(c + 1) + "!"
+                );
+                break;
+            }
+
+            logo_pik pik;
+
+            point min_pos = logo_min_screen_limit;
+            min_pos.x *= game.win_w / 100.0f;
+            min_pos.y *= game.win_h / 100.0f;
+            point max_pos = logo_max_screen_limit;
+            max_pos.x *= game.win_w / 100.0f;
+            max_pos.y *= game.win_h / 100.0f;
+
+            pik.top = logo_type_bitmaps[row[c]];
+            pik.destination =
+                point(
+                    min_pos.x +
+                    (max_pos.x - min_pos.x) *
+                    (c / (float)map_total_cols),
+                    min_pos.y +
+                    (max_pos.y - min_pos.y) *
+                    (r / (float)map_total_rows)
+                );
+
+            unsigned char h_side = randomi(0, 1);
+            unsigned char v_side = randomi(0, 1);
+
+            pik.pos =
+                point(
+                    randomf(0, game.win_w * 0.5),
+                    randomf(0, game.win_h * 0.5)
+                );
+
+            if (h_side == 0) {
+                pik.pos.x -= game.win_w * 1.2;
+            }
+            else {
+                pik.pos.x += game.win_w * 1.2;
+            }
+            if (v_side == 0) {
+                pik.pos.y -= game.win_h * 1.2;
+            }
+            else {
+                pik.pos.y += game.win_h * 1.2;
+            }
+
+            pik.angle = randomf(0, TAU);
+            pik.speed = randomf(logo_pikmin_min_speed, logo_pikmin_max_speed);
+            pik.sway_speed =
+                randomf(logo_pikmin_sway_min_speed, logo_pikmin_sway_max_speed);
+            pik.sway_var = 0;
+            pik.reached_destination = false;
+            logo_pikmin.push_back(pik);
+        }
+
+        if (!map_ok) break;
+    }
+
     //Finishing touches.
     game.fade_mgr.start_fade(true, nullptr);
     gui.set_selected_item(gui.back_item);
@@ -381,6 +535,9 @@ void options_menu_state::unload() {
     
     //Menu items.
     gui.destroy();
+
+    //Misc.
+    logo_pikmin.clear();
 }
 
 

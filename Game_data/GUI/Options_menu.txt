@@ -1,9 +1,36 @@
 positions {
-    back =            15 10 20  6
-    fullscreen =      24 20 45  8
-    resolution =      24 30 45  8
-    cursor_speed =    24 45 45  8
-    auto_throw =      24 55 45  8
-    controls =        24 65 45  8
-    restart_warning = 50 95 95 10
+    back =            50 95 20  6
+    fullscreen =      50 44 50  7
+    resolution =      50 52 50  7
+    cursor_speed =    50 62 50  7
+    auto_throw =      50 70 50  7
+    controls =        50 80 50  7
+    restart_warning = 50 88 50 10
+}
+logo {
+    min_screen_limit = 10 10
+    max_screen_limit = 90 34
+    pikmin_max_speed = 800
+    pikmin_min_speed = 600
+    pikmin_speed_smoothness = 0.08
+    pikmin_sway_amount = 2
+    pikmin_sway_max_speed = 6.5
+    pikmin_sway_min_speed = 2.5
+    pikmin_size = 3.5 3.5
+    pikmin_types {
+        X = Pink_Flower_icon.png 
+		O = Flower_icon.png 
+    }
+    map {
+        ..OOO....OOOOO...OOOOOOOO..OOOOOO....OOO....OOOO....OO...OOOO..
+        .OO.OO...OOOOOO..OOOOOOOO..OOOOOO...OO.OO...OOOO....OO..OO..OO.
+        OO...OO..OO...OO....OO.......OO....OO...OO..OO.OO...OO..OO.....
+        OO...OO..OO...OO....OO.......OO....OO...OO..OO.OO...OO...OO....
+        OO...OO..OOOOOO.....OO.......OO....OO...OO..OO..OO..OO....OO...
+        OO...OO..OOOOO......OO.......OO....OO...OO..OO..OO..OO.....OO..
+        OO...OO..OO.........OO.......OO....OO...OO..OO...OO.OO......OO.
+        OO...OO..OO.........OO.......OO....OO...OO..OO...OO.OO......OO.
+        .OO.OO...OO.........OO.....OOOOOO...OO.OO...OO....OOOO..OO..OO.
+        ..OOO....OO.........OO.....OOOOOO....OOO....OO....OOOO...OOOO..
+    }
 }
