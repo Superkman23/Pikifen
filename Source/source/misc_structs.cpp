@@ -1954,7 +1954,8 @@ logo_map::logo_map() :
     logo_pikmin_sway_amount(3.0f),
     logo_pikmin_sway_max_speed(5.5f),
     logo_pikmin_sway_min_speed(2.5f),
-    logo_pikmin_size(3.5f, 3.5f) {
+    logo_pikmin_size(3.5f, 3.5f),
+    logo_tint(al_map_rgba(255, 255, 255, 255)) {
 
 }
 
@@ -1994,6 +1995,7 @@ void logo_map::load(data_node* logo_node) {
     logo_rs.set("pikmin_sway_max_speed", logo_pikmin_sway_max_speed);
     logo_rs.set("pikmin_sway_min_speed", logo_pikmin_sway_min_speed);
     logo_rs.set("pikmin_size", logo_pikmin_size);
+    logo_rs.set("tint", logo_tint);
 
     bool map_ok = true;
 

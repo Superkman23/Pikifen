@@ -54,6 +54,7 @@ struct logo_map {
     float logo_pikmin_sway_max_speed;
     float logo_pikmin_sway_min_speed;
     point logo_pikmin_size;
+    ALLEGRO_COLOR logo_tint;
     map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
 };
 

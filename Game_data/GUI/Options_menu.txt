@@ -17,8 +17,8 @@ logo {
     pikmin_sway_max_speed = 6.5
     pikmin_sway_min_speed = 2.5
     pikmin_size = 3.5 3.5
+	tint = 128 128 128
     pikmin_types {
-        X = Pink_Flower_icon.png 
 		O = Flower_icon.png 
     }
     map {

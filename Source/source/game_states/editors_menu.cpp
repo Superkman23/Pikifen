@@ -46,7 +46,7 @@ void editors_menu_state::do_drawing() {
     );
     
     //Draw the logo Pikmin.
-    logo_data.do_drawing(map_gray(255));
+    logo_data.do_drawing(logo_data.logo_tint);
     
     gui.draw();
     
