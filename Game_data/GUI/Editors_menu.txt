@@ -5,8 +5,8 @@ positions {
 }
 
 logo {
-    min_screen_limit = 10 10
-    max_screen_limit = 90 34
+    min_screen_limit = 10 25
+    max_screen_limit = 90 54
     pikmin_max_speed = 800
     pikmin_min_speed = 600
     pikmin_speed_smoothness = 0.08

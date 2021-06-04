@@ -35,6 +35,29 @@ struct logo_pik {
     bool reached_destination;
 };
 
+
+struct logo_map {
+
+    logo_map();
+    virtual void load(data_node* logo_node);
+    virtual void unload();
+    virtual void do_logic();
+    virtual void do_drawing(ALLEGRO_COLOR tint);
+
+    vector<logo_pik> logo_pikmin;
+    point logo_min_screen_limit;
+    point logo_max_screen_limit;
+    float logo_pikmin_max_speed;
+    float logo_pikmin_min_speed;
+    float logo_pikmin_speed_smoothness;
+    float logo_pikmin_sway_amount;
+    float logo_pikmin_sway_max_speed;
+    float logo_pikmin_sway_min_speed;
+    point logo_pikmin_size;
+    map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
+};
+
+
 class main_menu_state : public game_state {
 public:
     main_menu_state();
@@ -50,21 +73,11 @@ private:
     ALLEGRO_BITMAP* bmp_menu_bg;
     gui_manager gui;
     
-    //Logo info
-    vector<logo_pik> logo_pikmin;
-    point logo_min_screen_limit;
-    point logo_max_screen_limit;
-    float logo_pikmin_max_speed;
-    float logo_pikmin_min_speed;
-    float logo_pikmin_speed_smoothness;
-    float logo_pikmin_sway_amount;
-    float logo_pikmin_sway_max_speed;
-    float logo_pikmin_sway_min_speed;
-    point logo_pikmin_size;
-    map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
+    logo_map logo_data;
     
     static const string GUI_FILE_PATH;
 };
+
 
 class editors_menu_state : public game_state {
 public:
@@ -77,25 +90,14 @@ public:
     virtual string get_name() const;
 
 private:
-
     ALLEGRO_BITMAP* bmp_menu_bg;
     gui_manager gui;
 
-    //Logo info
-    vector<logo_pik> logo_pikmin;
-    point logo_min_screen_limit;
-    point logo_max_screen_limit;
-    float logo_pikmin_max_speed;
-    float logo_pikmin_min_speed;
-    float logo_pikmin_speed_smoothness;
-    float logo_pikmin_sway_amount;
-    float logo_pikmin_sway_max_speed;
-    float logo_pikmin_sway_min_speed;
-    point logo_pikmin_size;
-    map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
+    logo_map logo_data;
 
     static const string GUI_FILE_PATH;
 };
+
 
 class options_menu_state : public game_state {
 public:
@@ -134,18 +136,7 @@ private:
     static const unsigned char N_AUTO_THROW_PRESETS;
     static const unsigned char N_CURSOR_SPEED_PRESETS;
     
-    //Logo info
-    vector<logo_pik> logo_pikmin;
-    point logo_min_screen_limit;
-    point logo_max_screen_limit;
-    float logo_pikmin_max_speed;
-    float logo_pikmin_min_speed;
-    float logo_pikmin_speed_smoothness;
-    float logo_pikmin_sway_amount;
-    float logo_pikmin_sway_max_speed;
-    float logo_pikmin_sway_min_speed;
-    point logo_pikmin_size;
-    map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
+    logo_map logo_data;
 };
 
 
