@@ -66,6 +66,36 @@ private:
     static const string GUI_FILE_PATH;
 };
 
+class editors_menu_state : public game_state {
+public:
+    editors_menu_state();
+    virtual void load();
+    virtual void unload();
+    virtual void handle_allegro_event(ALLEGRO_EVENT& ev);
+    virtual void do_logic();
+    virtual void do_drawing();
+    virtual string get_name() const;
+
+private:
+
+    ALLEGRO_BITMAP* bmp_menu_bg;
+    gui_manager gui;
+
+    //Logo info
+    vector<logo_pik> logo_pikmin;
+    point logo_min_screen_limit;
+    point logo_max_screen_limit;
+    float logo_pikmin_max_speed;
+    float logo_pikmin_min_speed;
+    float logo_pikmin_speed_smoothness;
+    float logo_pikmin_sway_amount;
+    float logo_pikmin_sway_max_speed;
+    float logo_pikmin_sway_min_speed;
+    point logo_pikmin_size;
+    map<unsigned char, ALLEGRO_BITMAP*> logo_type_bitmaps;
+
+    static const string GUI_FILE_PATH;
+};
 
 class options_menu_state : public game_state {
 public:

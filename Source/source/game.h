@@ -41,6 +41,7 @@ struct game_state_list {
     area_editor* area_ed;
     area_menu_state* area_menu;
     controls_menu_state* controls_menu;
+    editors_menu_state* editors_menu;
     gameplay_state* gameplay;
     main_menu_state* main_menu;
     options_menu_state* options_menu;

@@ -311,6 +311,7 @@
     <ClCompile Include="..\source\game_states\area_menu.cpp" />
     <ClCompile Include="..\source\game_states\controls_menu.cpp" />
     <ClCompile Include="..\source\game_states\editor.cpp" />
+    <ClCompile Include="..\source\game_states\editors_menu.cpp" />
     <ClCompile Include="..\source\game_states\gameplay\drawing.cpp" />
     <ClCompile Include="..\source\game_states\gameplay\gameplay.cpp" />
     <ClCompile Include="..\source\game_states\gameplay\logic.cpp" />

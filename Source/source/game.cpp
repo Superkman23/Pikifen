@@ -346,6 +346,7 @@ void game_state_list::destroy() {
     area_ed = NULL;
     area_menu = NULL;
     controls_menu = NULL;
+    editors_menu = NULL;
     gameplay = NULL;
     main_menu = NULL;
     options_menu = NULL;
@@ -361,6 +362,7 @@ void game_state_list::init() {
     area_ed = new area_editor();
     area_menu = new area_menu_state();
     controls_menu = new controls_menu_state();
+    editors_menu = new editors_menu_state();
     gameplay = new gameplay_state();
     main_menu = new main_menu_state();
     options_menu = new options_menu_state();

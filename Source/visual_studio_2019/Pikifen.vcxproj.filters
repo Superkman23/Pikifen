@@ -854,6 +854,9 @@
     <ClCompile Include="..\source\edge_offset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\game_states\editors_menu.cpp">
+      <Filter>Source Files\game_states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc">
